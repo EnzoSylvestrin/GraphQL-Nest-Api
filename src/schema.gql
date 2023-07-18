@@ -7,14 +7,23 @@ type Auth {
   exampleField: Int!
 }
 
+type LogoutResponse {
+  loggedOut: Boolean!
+}
+
 type Mutation {
-  removeAuth(id: Int!): Auth!
+  logout(id: Int!): LogoutResponse!
+  signIn(signInInput: SignInInput!): SignResponse!
   signUp(signUpInput: SignUpInput!): SignResponse!
-  updateAuth(updateAuthInput: UpdateAuthInput!): Auth!
 }
 
 type Query {
   auth(id: Int!): Auth!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
 }
 
 type SignResponse {
@@ -27,13 +36,6 @@ input SignUpInput {
   email: String!
   password: String!
   username: String!
-}
-
-input UpdateAuthInput {
-  email: String
-  id: Int!
-  password: String
-  username: String
 }
 
 type User {

@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 import { SignUpInput } from './dto/signup-input';
-import { UpdateAuthInput } from './dto/update-auth.input';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import * as Argon from 'argon2';
+import { SignInInput } from './dto/signin-input';
 
 @Injectable()
 export class AuthService {
@@ -17,12 +17,34 @@ export class AuthService {
         private readonly configService: ConfigService,
     ) {}
 
-    findAll() {
-        return `This action returns all auth`;
-    }
+    async signIn(signInInput: SignInInput) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                email: signInInput.email,
+            },
+        });
 
-    findOne(id: number) {
-        return `This action returns a #${id} auth`;
+        if (!user) {
+            throw new ForbiddenException('Invalid credentials');
+        }
+
+        const passwordMatch = await Argon.verify(
+            user.hashedPassword,
+            signInInput.password,
+        );
+
+        if (!passwordMatch) {
+            throw new ForbiddenException('Invalid credentials');
+        }
+
+        const { accessToken, refreshToken } = await this.createTokens({
+            userId: user.id,
+            email: user.email,
+        });
+
+        await this.updateRefreshToken({ userId: user.id, refreshToken });
+
+        return { accessToken, refreshToken, user };
     }
 
     async singUp(signUpInput: SignUpInput) {
@@ -50,12 +72,22 @@ export class AuthService {
         };
     }
 
-    update(id: number, updateAuthInput: UpdateAuthInput) {
-        return `This action updates a #${id} auth`;
+    async logout(userId: number) {
+        await this.prisma.user.updateMany({
+            where: {
+                id: userId,
+                hashedRefreshToken: { not: null },
+            },
+            data: {
+                hashedRefreshToken: null,
+            },
+        });
+
+        return { loggedOut: true };
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} auth`;
+    async findOne(id: number) {
+        return 'eba';
     }
 
     async createTokens({ userId, email }: { userId: number; email: string }) {
