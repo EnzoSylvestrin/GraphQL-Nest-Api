@@ -5,8 +5,17 @@ import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AccessTokenStrategy } from './strategies/accessToken.strategy';
+import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 
 @Module({
-    providers: [AuthResolver, AuthService, PrismaService, JwtService],
+    providers: [
+        AuthResolver,
+        AuthService,
+        PrismaService,
+        JwtService,
+        AccessTokenStrategy,
+        RefreshTokenStrategy,
+    ],
 })
 export class AuthModule {}

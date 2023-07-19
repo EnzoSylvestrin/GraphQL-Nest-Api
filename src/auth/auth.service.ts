@@ -86,10 +86,6 @@ export class AuthService {
         return { loggedOut: true };
     }
 
-    async findOne(id: number) {
-        return 'eba';
-    }
-
     async createTokens({ userId, email }: { userId: number; email: string }) {
         const accessToken = this.jwtService.sign(
             {
@@ -97,7 +93,7 @@ export class AuthService {
                 email,
             },
             {
-                expiresIn: '10s',
+                expiresIn: '1h',
                 secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
             },
         );
@@ -137,5 +133,35 @@ export class AuthService {
                 hashedRefreshToken,
             },
         });
+    }
+
+    async getNewTokens(userId: number, rf: string) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+
+        if (!user) {
+            throw new ForbiddenException('Invalid credentials');
+        }
+
+        const refreshTokenMatch = await Argon.verify(
+            user.hashedRefreshToken,
+            rf,
+        );
+
+        if (!refreshTokenMatch) {
+            throw new ForbiddenException('Invalid credentials');
+        }
+
+        const { accessToken, refreshToken } = await this.createTokens({
+            userId: user.id,
+            email: user.email,
+        });
+
+        await this.updateRefreshToken({ userId: user.id, refreshToken });
+
+        return { accessToken, refreshToken, user };
     }
 }

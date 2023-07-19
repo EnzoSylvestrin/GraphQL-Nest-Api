@@ -2,23 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Auth {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
 type LogoutResponse {
   loggedOut: Boolean!
 }
 
 type Mutation {
+  getNewTokens: NewTokenResponse!
   logout(id: Int!): LogoutResponse!
   signIn(signInInput: SignInInput!): SignResponse!
   signUp(signUpInput: SignUpInput!): SignResponse!
 }
 
+type NewTokenResponse {
+  accessToken: String!
+  refreshToken: String!
+}
+
 type Query {
-  auth(id: Int!): Auth!
+  hello: String!
 }
 
 input SignInInput {
